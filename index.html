@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Autonomous Supply Chain Recovery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#2563EB;
+    --violet:#7C3AED;
+    --emerald:#10B981;
+    --amber:#F59E0B;
+    --red:#EF4444;
+    --cyan:#06B6D4;
+    --pink:#EC4899;
+    --bg:#F6F8FC;
+    --card:#FFFFFF;
+    --ink:#0F172A;
+    --ink-soft:#5B6478;
+    --line:#E7ECF5;
+    --radius:20px;
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 30px -12px rgba(37,99,235,.12);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 500px at 85% -8%, rgba(124,58,237,.10), transparent 60%),
+      radial-gradient(900px 500px at 5% 0%, rgba(37,99,235,.10), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Manrope',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 32px;}
+  @media(max-width:720px){.wrap{padding:0 18px;}}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(246,248,252,.82);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .navrow{display:flex;align-items:center;justify-content:space-between;height:72px;gap:24px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .mark{
+    width:38px;height:38px;border-radius:11px;
+    background:linear-gradient(140deg,var(--blue),var(--violet));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 18px -6px rgba(124,58,237,.55);
+  }
+  .brand .mark svg{width:20px;height:20px;}
+  .brand .name{font-weight:800;font-size:19px;letter-spacing:.2px;}
+  .brand .sub{font-size:11.5px;color:var(--ink-soft);font-weight:600;margin-top:-2px;}
+  .navlinks{display:flex;gap:6px;}
+  .navlinks a{padding:9px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink-soft);transition:.15s;}
+  .navlinks a:hover{color:var(--ink);background:#EEF2FB;}
+  .navlinks a.active{color:var(--blue);background:#EAF0FE;}
+  .navright{display:flex;align-items:center;gap:14px;}
+  .status-pill{
+    display:flex;align-items:center;gap:8px;
+    background:#ECFDF5;border:1px solid #B9F3D9;color:#067A55;
+    padding:7px 13px 7px 10px;border-radius:100px;font-size:13px;font-weight:700;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--emerald);position:relative;}
+  .dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;background:var(--emerald);opacity:.35;animation:pulse-ring 1.8s infinite;}
+  @keyframes pulse-ring{0%{transform:scale(.6);opacity:.5;}100%{transform:scale(2.2);opacity:0;}}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(140deg,var(--cyan),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:13px;}
+  @media(max-width:980px){.navlinks{display:none;}}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:64px 0 40px;}
+  .eyebrow-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .badge{
+    display:inline-flex;align-items:center;gap:7px;
+    background:linear-gradient(90deg,#EEF2FF,#F5EEFF);
+    border:1px solid #E2E4FB;color:var(--violet);
+    font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:100px;
+  }
+  .badge svg{width:13px;height:13px;}
+  h1.hero-title{font-size:52px;line-height:1.05;font-weight:800;letter-spacing:-1.2px;max-width:820px;margin:0 0 18px;}
+  .hero-sub{font-size:18px;color:var(--ink-soft);max-width:640px;line-height:1.55;margin:0 0 30px;}
+  @media(max-width:720px){h1.hero-title{font-size:36px;}}
+
+  .cta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:44px;}
+  .btn-run{
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(115deg,var(--blue),var(--violet));
+    color:#fff;font-weight:700;font-size:15px;
+    padding:15px 24px;border-radius:14px;border:none;cursor:pointer;
+    box-shadow:0 14px 28px -10px rgba(37,99,235,.55);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn-run:hover{transform:translateY(-2px);box-shadow:0 18px 34px -8px rgba(37,99,235,.65);}
+  .btn-run:active{transform:translateY(0);}
+  .btn-run svg{width:17px;height:17px;}
+  .step-indicator{font-size:13.5px;color:var(--ink-soft);font-weight:600;}
+  .step-indicator .n{color:var(--blue);font-family:'JetBrains Mono',monospace;font-weight:700;}
+
+  .metrics{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:14px;
+  }
+  @media(max-width:1180px){.metrics{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:600px){.metrics{grid-template-columns:repeat(2,1fr);}}
+  .mcard{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:18px 18px 16px;box-shadow:var(--shadow);
+    position:relative;overflow:hidden;
+  }
+  .mcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent,var(--blue));}
+  .mcard .mlabel{font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:9px;}
+  .mcard .mval{font-family:'Manrope',sans-serif;font-weight:800;font-size:27px;letter-spacing:-.5px;}
+  .mcard .mtrend{font-size:12px;font-weight:700;margin-top:7px;display:flex;align-items:center;gap:4px;}
+  .up{color:var(--emerald);} .down{color:var(--red);}
+
+  /* ---------- SECTION HEADERS ---------- */
+  .section{padding:56px 0;}
+  .section-head{margin-bottom:30px;max-width:640px;}
+  .section-tag{font-size:12.5px;font-weight:700;color:var(--violet);letter-spacing:.3px;margin-bottom:8px;}
+  .section-title{font-size:28px;font-weight:800;letter-spacing:-.5px;margin:0 0 8px;}
+  .section-desc{color:var(--ink-soft);font-size:15px;line-height:1.55;}
+
+  /* ---------- RECOVERY LOOP TRACK ---------- */
+  .loop-card{
+    background:var(--card);border:1px solid var(--line);border-radius:28px;
+    padding:34px 30px 30px;box-shadow:var(--shadow);
+  }
+  .track{
+    display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding-bottom:14px;margin-bottom:6px;
+    scrollbar-width:thin;
+  }
+  .node{
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    min-width:112px;cursor:pointer;flex-shrink:0;position:relative;
+  }
+  .node .circle{
+    width:56px;height:56px;border-radius:50%;
+    background:#F1F4FA;border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    transition:.25s;position:relative;z-index:2;
+  }
+  .node .idx{
+    position:absolute;top:-6px;right:-2px;background:#fff;border:1px solid var(--line);
+    border-radius:50%;width:19px;height:19px;font-size:9.5px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;color:var(--ink-soft);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .node .label{font-size:12.5px;font-weight:700;color:var(--ink-soft);text-align:center;max-width:100px;}
+  .connector{flex:1;height:2px;background:var(--line);margin-top:27px;min-width:24px;position:relative;top:0;}
+  .connector .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--blue),var(--violet));transition:width .5s ease;}
+  .node.active .circle{
+    background:linear-gradient(140deg,var(--accent,var(--blue)),var(--accent2,var(--violet)));
+    border-color:transparent;color:#fff;
+    box-shadow:0 0 0 6px var(--ring,rgba(37,99,235,.15)), 0 10px 22px -8px rgba(37,99,235,.6);
+    transform:scale(1.08);
+    animation:node-pulse 1.6s infinite;
+  }
+  @keyframes node-pulse{0%,100%{box-shadow:0 0 0 6px var(--ring,rgba(37,99,235,.15)),0 10px 22px -8px rgba(37,99,235,.6);}50%{box-shadow:0 0 0 11px var(--ring,rgba(37,99,235,.06)),0 10px 22px -8px rgba(37,99,235,.6);}}
+  .node.done .circle{background:#ECFDF5;border-color:#B9F3D9;color:var(--emerald);}
+  .node.active .label{color:var(--ink);}
+  .loop-back{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;color:var(--ink-soft);font-size:12.5px;font-weight:600;}
+  .loop-back svg{width:15px;height:15px;color:var(--cyan);}
+
+  .stage-panel{
+    margin-top:28px;border-top:1px solid var(--line);padding-top:26px;
+    display:grid;grid-template-columns:1.3fr 1fr;gap:28px;
+  }
+  @media(max-width:900px){.stage-panel{grid-template-columns:1fr;}}
+  .stage-title-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .stage-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--accentbg,#EAF0FE);}
+  .stage-heading{font-weight:800;font-size:18px;}
+  .stage-body{color:var(--ink-soft);font-size:14.5px;line-height:1.6;}
+
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;}
+  .pill{background:#F1F4FA;border:1px solid var(--line);padding:6px 11px;border-radius:100px;font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  .pill.crit{background:#FEECEC;color:#B91C1C;border-color:#F9CACA;}
+  .pill.warn{background:#FEF6E7;color:#92610A;border-color:#FBE4B4;}
+
+  .kv{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .kv:last-child{border-bottom:none;}
+  .kv .k{color:var(--ink-soft);}
+  .kv .v{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:13.5px;}
+
+  /* alternatives */
+  .alt-grid{display:grid;gap:12px;}
+  .alt-card{
+    border:1.5px solid var(--line);border-radius:16px;padding:16px 16px 14px;
+    cursor:pointer;transition:.2s;position:relative;background:#fff;
+  }
+  .alt-card:hover{border-color:#C7D6FB;transform:translateY(-2px);}
+  .alt-card.recommended{border-color:var(--emerald);background:#F3FBF7;box-shadow:0 8px 20px -10px rgba(16,185,129,.35);}
+  .alt-card .altname{font-weight:700;font-size:14.5px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+  .altbadge{font-size:10.5px;font-weight:800;color:#067A55;background:#DDFBEB;padding:3px 9px;border-radius:100px;letter-spacing:.2px;}
+  .altstats{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);font-family:'JetBrains Mono',monospace;}
+  .altstats b{color:var(--ink);font-family:'Inter',sans-serif;}
+
+  /* decision weights */
+  .weight-row{margin-bottom:12px;}
+  .weight-label{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px;}
+  .weight-track{height:8px;border-radius:100px;background:#EEF1F7;overflow:hidden;}
+  .weight-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--blue),var(--violet));width:0%;transition:width 1s cubic-bezier(.2,.8,.2,1);}
+
+  .confidence-ring{display:flex;align-items:center;gap:16px;margin-top:18px;padding:16px;background:linear-gradient(120deg,#F5F8FF,#F8F3FF);border-radius:16px;border:1px solid #E7EAFB;}
+  .ring-num{font-family:'Manrope',sans-serif;font-weight:800;font-size:30px;color:var(--violet);}
+  .rec-box{background:#0F172A;color:#fff;border-radius:16px;padding:16px 18px;margin-top:14px;}
+  .rec-box .rlabel{font-size:11.5px;color:#93A4C4;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .rec-box .rname{font-weight:800;font-size:16px;margin-bottom:8px;}
+  .rec-box .rreason{font-size:13.5px;color:#C7D2E8;line-height:1.55;font-style:italic;transition:opacity .2s;}
+  .live-tag{font-size:9.5px;font-weight:800;background:linear-gradient(90deg,var(--blue),var(--violet));color:#fff;padding:3px 9px;border-radius:100px;letter-spacing:.2px;}
+  .live-tag.warn{background:#92610A;}
+
+  .live-connect{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .live-connect input{
+    flex:1;min-width:200px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);
+    font-size:12.5px;font-family:'JetBrains Mono',monospace;background:#F8FAFD;color:var(--ink);
+  }
+  .live-connect input:focus{outline:none;border-color:var(--violet);}
+  .live-connect button{
+    padding:10px 16px;border-radius:10px;border:none;font-weight:700;font-size:12.5px;cursor:pointer;
+    background:linear-gradient(115deg,var(--blue),var(--violet));color:#fff;white-space:nowrap;
+  }
+  .live-connect button:disabled{opacity:.65;cursor:default;}
+  .live-hint{font-size:11.5px;color:var(--ink-soft);margin:-8px 0 14px;line-height:1.5;}
+
+  /* execution checklist */
+  .exec-list{display:flex;flex-direction:column;gap:10px;}
+  .exec-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:#F8FAFD;border:1px solid var(--line);font-size:13.5px;font-weight:600;color:var(--ink-soft);transition:.3s;}
+  .exec-item.done{background:#F3FBF7;border-color:#CFF3E1;color:var(--ink);}
+  .exec-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;transition:.3s;}
+  .exec-item.done .exec-check{background:var(--emerald);border-color:var(--emerald);}
+  .exec-item.active .exec-check{border-color:var(--amber);animation:node-pulse 1s infinite;}
+
+  .run-status{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px;margin-bottom:16px;}
+  .run-status .badge2{padding:5px 11px;border-radius:100px;font-size:12px;font-weight:800;}
+  .badge2.exec{background:#FEF6E7;color:#92610A;}
+  .badge2.ok{background:#DDFBEB;color:#067A55;}
+
+  /* verification */
+  .verify-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  @media(max-width:640px){.verify-grid{grid-template-columns:1fr;}}
+  .vcard{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff;}
+  .vcard .vlabel{font-size:11.5px;color:var(--ink-soft);font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px;}
+  .vcard .vflow{font-size:13px;font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
+  .vcard .vflow .before{color:#94A3B8;}
+  .vcard .vstatus{font-size:12px;font-weight:700;color:var(--emerald);display:flex;align-items:center;gap:5px;}
+
+  .success-banner{
+    margin-top:18px;text-align:center;padding:22px;border-radius:18px;
+    background:linear-gradient(120deg,#ECFDF5,#F0FBFF);border:1px solid #BEF3DA;
+  }
+  .success-banner .sb-title{font-family:'Manrope',sans-serif;font-weight:800;font-size:22px;color:#067A55;}
+  .success-banner .sb-sub{font-size:13px;color:var(--ink-soft);margin-top:6px;}
+
+  /* two-col split for lower sections */
+  .split{display:grid;grid-template-columns:1.6fr 1fr;gap:22px;}
+  @media(max-width:980px){.split{grid-template-columns:1fr;}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:var(--shadow);}
+  .panel h3{font-size:16px;font-weight:800;margin:0 0 16px;display:flex;align-items:center;gap:8px;}
+
+  /* activity feed */
+  .feed{display:flex;flex-direction:column;gap:0;max-height:420px;overflow-y:auto;}
+  .feed-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #F1F4FA;font-size:13px;animation:feed-in .35s ease;}
+  @keyframes feed-in{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+  .feed-time{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#94A3B8;min-width:64px;padding-top:1px;}
+  .feed-icon{width:22px;height:22px;flex-shrink:0;}
+  .feed-text{color:var(--ink);font-weight:500;line-height:1.4;}
+
+  /* network graph */
+  .netgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;}
+  .netnode{border:1.5px solid var(--line);border-radius:14px;padding:12px;text-align:center;transition:.4s;background:#fff;}
+  .netnode .nn-dot{width:9px;height:9px;border-radius:50%;margin:0 auto 8px;background:var(--emerald);}
+  .netnode .nn-name{font-weight:700;font-size:13px;}
+  .netnode .nn-role{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .netnode.risk{border-color:#FBE4B4;background:#FFFBF2;}
+  .netnode.risk .nn-dot{background:var(--amber);}
+  .netnode.down{border-color:#F9CACA;background:#FFF6F6;}
+  .netnode.down .nn-dot{background:var(--red);animation:node-pulse 1s infinite;}
+  .netnode.agent{border-color:#E2D6FB;background:#FBF8FF;}
+  .netnode.agent .nn-dot{background:var(--violet);}
+  .net-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--ink-soft);}
+  .net-legend span{display:flex;align-items:center;gap:6px;}
+  .leg-dot{width:8px;height:8px;border-radius:50%;}
+
+  /* disruption panel cards */
+  .dis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media(max-width:900px){.dis-grid{grid-template-columns:1fr;}}
+  .dis-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);border-left:4px solid var(--sev,var(--red));cursor:pointer;transition:.2s;}
+  .dis-card:hover{transform:translateY(-3px);}
+  .dis-card.selected{outline:2px solid var(--sev,var(--red));outline-offset:2px;}
+  .dis-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .dis-type{font-weight:800;font-size:14px;}
+  .sev-tag{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:100px;background:var(--sevbg,#FEECEC);color:var(--sevfg,#B91C1C);}
+  .dis-id{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .dis-stat{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);padding:5px 0;border-top:1px dashed var(--line);}
+  .dis-stat b{color:var(--ink);}
+  .agent-status-tag{margin-top:10px;font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:100px;display:inline-flex;align-items:center;gap:5px;}
+  .as-recovering{background:#FEF6E7;color:#92610A;}
+  .as-monitoring{background:#EAF0FE;color:var(--blue);}
+  .as-simulating{background:#F5EEFF;color:var(--violet);}
+
+  /* recovery run timeline */
+  .timeline{display:flex;flex-direction:column;gap:0;margin-top:16px;}
+  .tl-item{display:flex;gap:14px;padding-bottom:18px;position:relative;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{content:'';position:absolute;left:5px;top:16px;bottom:0;width:1.5px;background:var(--line);}
+  .tl-item:last-child::before{display:none;}
+  .tl-dot{width:11px;height:11px;border-radius:50%;background:var(--blue);margin-top:3px;flex-shrink:0;z-index:1;box-shadow:0 0 0 3px #fff;}
+  .tl-time{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-soft);}
+  .tl-label{font-weight:700;font-size:13.5px;}
+
+  footer{border-top:1px solid var(--line);padding:40px 0 60px;margin-top:20px;}
+  .foot-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;}
+  .foot-links{display:flex;gap:22px;font-size:13.5px;font-weight:600;color:var(--ink-soft);}
+  .foot-brand{font-weight:800;font-size:15px;}
+  .foot-sub{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
+
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; transition-duration:.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap navrow">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 12l9-5M12 12v10M12 12L3 7" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="name">NEXUS</div>
+        <div class="sub">Autonomous Supply Chain Recovery</div>
+      </div>
+    </div>
+    <div class="navlinks">
+      <a href="#hero" class="active">Command Center</a>
+      <a href="#disruptions">Disruptions</a>
+      <a href="#runs">Recovery Runs</a>
+      <a href="#network">Network</a>
+      <a href="#activity">Agent Activity</a>
+    </div>
+    <div class="navright">
+      <span class="status-pill"><span class="dot"></span>Agent Online</span>
+      <div class="avatar">OP</div>
+    </div>
+  </div>
+</nav>
+
+<header class="hero wrap" id="hero">
+  <div class="eyebrow-row">
+    <span class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      Live decision loop — problem statement 6
+    </span>
+  </div>
+  <h1 class="hero-title">Your supply chain has an ops manager that never sleeps.</h1>
+  <p class="hero-sub">NEXUS watches inventory, shipments, vendors and routes in real time. When something breaks, it investigates alternatives, weighs cost against delivery time and carbon, acts on your behalf, and confirms the fix held — before a human ever has to open a ticket.</p>
+
+  <div class="cta-row">
+    <button class="btn-run" id="runDemoBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+      Run Autonomous Recovery
+    </button>
+    <span class="step-indicator" id="stepIndicator">Idle — click to start the 10-step demo</span>
+  </div>
+
+  <div class="metrics" id="metrics">
+    <div class="mcard" style="--accent:var(--red)">
+      <div class="mlabel">Active Disruptions</div>
+      <div class="mval" data-metric="disruptions">03</div>
+      <div class="mtrend down">↓ steady</div>
+    </div>
+    <div class="mcard" style="--accent:var(--blue)">
+      <div class="mlabel">Orders Protected</div>
+      <div class="mval" data-metric="orders">1,284</div>
+      <div class="mtrend up">↑ 12.4%</div>
+    </div>
+    <div class="mcard" style="--accent:var(--violet)">
+      <div class="mlabel">Recovery Actions</div>
+      <div class="mval" data-metric="actions">27</div>
+      <div class="mtrend up">↑ 3 today</div>
+    </div>
+    <div class="mcard" style="--accent:var(--emerald)">
+      <div class="mlabel">Delivery Promise</div>
+      <div class="mval" data-metric="promise">97.8%</div>
+      <div class="mtrend up">↑ 1.1pt</div>
+    </div>
+    <div class="mcard" style="--accent:var(--amber)">
+      <div class="mlabel">Cost Saved</div>
+      <div class="mval" data-metric="cost">₹1.84L</div>
+      <div class="mtrend up">↑ ₹22K</div>
+    </div>
+    <div class="mcard" style="--accent:var(--cyan)">
+      <div class="mlabel">Carbon Avoided</div>
+      <div class="mval" data-metric="carbon">326 kg</div>
+      <div class="mtrend up">↑ 18 kg</div>
+    </div>
+  </div>
+</header>
+
+<section class="section wrap" id="loop">
+  <div class="section-head">
+    <div class="section-tag">The core loop</div>
+    <h2 class="section-title">Autonomous recovery loop</h2>
+    <p class="section-desc">Every disruption moves through the same eight-stage loop. Click a stage to inspect it, or run the demo to watch the agent move through all eight on its own — then start again on the next disruption.</p>
+  </div>
+
+  <div class="loop-card">
+    <div class="track" id="track"></div>
+    <div class="loop-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.1v-2a4 4 0 014-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.9v2a4 4 0 01-4 4H3"/></svg>
+      Loop closes back to Monitor — the agent never stops watching
+    </div>
+
+    <div class="stage-panel" id="stagePanel"><!-- injected --></div>
+  </div>
+</section>
+
+<section class="section wrap" id="disruptions">
+  <div class="section-head">
+    <div class="section-tag">Disruption panel</div>
+    <h2 class="section-title">Everything the agent is watching</h2>
+    <p class="section-desc">Each disruption card shows severity, blast radius and what the agent is currently doing about it. Click one to load it into the loop above.</p>
+  </div>
+  <div class="dis-grid" id="disGrid"></div>
+</section>
+
+<section class="section wrap" id="network">
+  <div class="split">
+    <div class="panel">
+      <h3>🕸️ Supply network</h3>
+      <div class="netgrid" id="netGrid"></div>
+      <div class="net-legend">
+        <span><span class="leg-dot" style="background:var(--emerald)"></span>Healthy</span>
+        <span><span class="leg-dot" style="background:var(--amber)"></span>At risk</span>
+        <span><span class="leg-dot" style="background:var(--red)"></span>Disrupted</span>
+        <span><span class="leg-dot" style="background:var(--violet)"></span>Agent intervention</span>
+      </div>
+    </div>
+    <div class="panel" id="activity">
+      <h3>📡 Agent activity</h3>
+      <div class="feed" id="feed"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="runs">
+  <div class="split">
+    <div class="panel">
+      <h3>🧾 Recovery run #REC-2841</h3>
+      <div class="run-status"><span class="badge2 ok" id="runBadge">Completed</span></div>
+      <div class="kv"><span class="k">Trigger</span><span class="v">SHP-4821 delay</span></div>
+      <div class="kv"><span class="k">Impact</span><span class="v">184 orders</span></div>
+      <div class="kv"><span class="k">Investigation</span><span class="v">14 strategies evaluated</span></div>
+      <div class="kv"><span class="k">Decision</span><span class="v">Pune → Kolkata transfer</span></div>
+      <div class="kv"><span class="k">Action</span><span class="v">Executed</span></div>
+      <div class="kv"><span class="k">Verification</span><span class="v">Promise restored</span></div>
+      <div class="timeline" id="runTimeline"></div>
+    </div>
+    <div class="panel">
+      <h3>🧠 Why this action?</h3>
+      <div class="kv"><span class="k">Delivery promise</span><span class="v" style="font-family:'Inter'">High priority</span></div>
+      <div class="kv"><span class="k">Cost</span><span class="v" style="font-family:'Inter'">18% lower</span></div>
+      <div class="kv"><span class="k">Carbon</span><span class="v" style="font-family:'Inter'">23% lower</span></div>
+      <div class="kv"><span class="k">Reliability</span><span class="v" style="font-family:'Inter'">96%</span></div>
+      <div class="rec-box" style="margin-top:14px;">
+        <div class="rlabel">AGENT EXPLANATION</div>
+        <div class="rreason" style="font-style:normal;color:#E8EDFB;">"The agent selected Warehouse Transfer because it restored the delivery promise with the best overall trade-off between delivery time, cost and carbon impact — not the fastest option, and not the cheapest, but the best balance for this specific shipment."</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <div>
+      <div class="foot-brand">NEXUS</div>
+      <div class="foot-sub">Autonomous Retail Supply Chain Recovery Agent — Hackathon Build, PS6</div>
+    </div>
+    <div class="foot-links">
+      <a href="README.md">Docs</a>
+      <a href="ARCHITECTURE.md">Architecture</a>
+      <a href="#hero">Back to top</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---------------------------------------------------------------
+   DATA
+--------------------------------------------------------------- */
+const STAGES = [
+  {icon:"👁️", key:"monitor",  title:"Monitor",             color:"var(--blue)",  color2:"var(--cyan)",  bg:"#EAF0FE", ring:"rgba(37,99,235,.15)"},
+  {icon:"⚠️", key:"disrupt",  title:"Disruption detected", color:"var(--red)",   color2:"#F87171",       bg:"#FEECEC", ring:"rgba(239,68,68,.15)"},
+  {icon:"🔍", key:"investigate", title:"Investigate",      color:"var(--amber)", color2:"#FBBF24",       bg:"#FEF6E7", ring:"rgba(245,158,11,.15)"},
+  {icon:"📊", key:"alternatives", title:"Alternatives found", color:"var(--cyan)", color2:"var(--blue)",  bg:"#E6F9FC", ring:"rgba(6,182,212,.15)"},
+  {icon:"🧠", key:"decision", title:"Decision",            color:"var(--violet)",color2:"#A78BFA",       bg:"#F5EEFF", ring:"rgba(124,58,237,.15)"},
+  {icon:"⚡", key:"action",   title:"Action",               color:"var(--pink)",  color2:"var(--violet)", bg:"#FDEAF4", ring:"rgba(236,72,153,.15)"},
+  {icon:"✅", key:"verify",   title:"Verify",              color:"var(--emerald)",color2:"#34D399",       bg:"#E7FBF1", ring:"rgba(16,185,129,.15)"},
+  {icon:"👁️", key:"monitor2", title:"Monitor again",       color:"var(--blue)",  color2:"var(--cyan)",  bg:"#EAF0FE", ring:"rgba(37,99,235,.15)"},
+];
+
+const DISRUPTIONS = [
+  {id:"SHP-4821", type:"Shipment delay", sev:"crit", sevLabel:"Critical",
+   sevColor:"var(--red)", sevBg:"#FEECEC", sevFg:"#B91C1C",
+   route:"Mumbai → Kolkata", orders:184, status:"recovering",
+   detected:"10:42:05", desc:"Backup vendor + warehouse transfer under evaluation."},
+  {id:"SKU-8842", type:"Inventory shortage", sev:"warn", sevLabel:"Warning",
+   sevColor:"var(--amber)", sevBg:"#FEF6E7", sevFg:"#92610A",
+   route:"Vendor V-019 · Stock 18/150", orders:96, status:"monitoring",
+   detected:"10:38:52", desc:"Below safety stock. Queued for next recovery cycle."},
+  {id:"SKU-2391", type:"Demand spike", sev:"warn2", sevLabel:"Elevated",
+   sevColor:"var(--pink)", sevBg:"#FDEAF4", sevFg:"#9D174D",
+   route:"Demand +47%", orders:320, status:"simulating",
+   detected:"10:35:11", desc:"Agent is simulating reorder-point adjustments."},
+];
+
+const NETWORK = [
+  {name:"Vendor · Mumbai", role:"Supplier", state:"down"},
+  {name:"WH · Pune",       role:"Warehouse", state:"agent"},
+  {name:"WH · Kolkata",    role:"Warehouse", state:"agent"},
+  {name:"DC · Delhi",      role:"Distribution", state:"ok"},
+  {name:"Store · Bengaluru", role:"Retail store", state:"ok"},
+  {name:"Store · Hyderabad", role:"Retail store", state:"risk"},
+];
+
+const ALTS = [
+  {name:"Backup vendor — Mumbai", cost:"₹18,400", eta:"+7 hrs", co2:"42 kg CO₂", prob:"96%", recommended:false},
+  {name:"Warehouse transfer — Pune → Kolkata", cost:"₹12,800", eta:"+11 hrs", co2:"31 kg CO₂", prob:"91%", recommended:true},
+  {name:"Route reassignment", cost:"₹9,200", eta:"+16 hrs", co2:"25 kg CO₂", prob:"82%", recommended:false},
+];
+
+const EXEC_STEPS = [
+  "Reserve warehouse inventory",
+  "Create transfer request",
+  "Reassign shipment",
+  "Update delivery ETA",
+  "Notify affected order system",
+  "Update transportation plan",
+];
+
+/* ---------------------------------------------------------------
+   STAGE PANEL RENDERERS
+--------------------------------------------------------------- */
+function renderStage(i){
+  const s = STAGES[i];
+  const panel = document.getElementById('stagePanel');
+  let left = "", right = "";
+
+  if(i===0){ // monitor
+    left = `
+      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Continuous monitoring</div></div>
+      <div class="stage-body">NEXUS polls inventory levels, shipment GPS/status feeds, vendor availability, live demand signals, warehouse capacity and route conditions across the network — every few seconds, not once a day.</div>
+      <div class="pillrow"><span class="pill">Inventory</span><span class="pill">Shipments</span><span class="pill">Vendors</span><span class="pill">Demand</span><span class="pill">Warehouse capacity</span><span class="pill">Routes</span></div>`;
+    right = `<div class="kv"><span class="k">Shipments tracked</span><span class="v">214</span></div><div class="kv"><span class="k">SKUs watched</span><span class="v">1,842</span></div><div class="kv"><span class="k">Vendors monitored</span><span class="v">37</span></div><div class="kv"><span class="k">Poll interval</span><span class="v">4s</span></div>`;
+  } else if(i===1){ // disruption
+    left = `
+      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Shipment SHP-4821 delayed</div></div>
+      <div class="stage-body">The plan just broke. A carrier delay pushes the delivery window past the customer promise.</div>
+      <div class="pillrow"><span class="pill crit">184 orders at risk</span><span class="pill">Mumbai → Kolkata</span></div>`;
+    right = `<div class="kv"><span class="k">Expected arrival</span><span class="v">Today 14:30</span></div><div class="kv"><span class="k">New ETA</span><span class="v" style="color:var(--red)">Tomorrow 22:15</span></div><div class="kv"><span class="k">Detected at</span><span class="v">10:42:18</span></div>`;
+  } else if(i===2){ // investigate
+    left = `
+      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Agent investigating…</div></div>
+      <div class="stage-body">Before touching anything, the agent scans for ways to still hit the delivery promise: alternate vendors, warehouse-to-warehouse transfers, transport routes, and available inventory across the network.</div>
+      <div class="pillrow"><span class="pill">Alternative vendors</span><span class="pill">Warehouse allocations</span><span class="pill">Transport routes</span><span class="pill">Delivery windows</span></div>`;
+    right = `<div class="kv"><span class="k">Candidates scanned</span><span class="v" id="scanCounter">0 / 14</span></div><div class="kv"><span class="k">Viable strategies</span><span class="v">—</span></div>`;
+  } else if(i===3){ // alternatives
+    left = `
+      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">3 viable strategies found</div></div>
+      <div class="alt-grid">${ALTS.map(a=>altCard(a)).join("")}</div>`;
+    right = `<div class="stage-body">Click a candidate to inspect its trade-offs. The agent doesn't pick the first workable option — it scores every one against the same weighted criteria before deciding.</div>`;
+  } else if(i===4){ // decision
+    left = `
+      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Decision engine</div></div>
+      ${weightRow("Delivery promise",45)}${weightRow("Cost",30)}${weightRow("Carbon impact",15)}${weightRow("Reliability",10)}
+      <div class="confidence-ring"><div class="ring-num">94%</div><div><div style="font-weight:700;font-size:13.5px;">Confidence score</div><div style="font-size:12px;color:var(--ink-soft);">Based on 14 evaluated strategies</div></div></div>`;
+    right = `
+      <div class="live-connect">
+        <input type="password" id="groqKeyInput" placeholder="Paste a Groq API key to generate this reasoning live (optional)" autocomplete="off">
+        <button id="connectGroqBtn">Connect</button>
+      </div>
+      <div class="live-hint">Runs entirely in your browser, straight to Groq — nothing is stored or sent anywhere else. Leave it blank to keep the demo copy below.</div>
+      <div class="rec-box">
+        <div class="rlabel">AI RECOMMENDATION <span class="live-tag" id="liveBadge" style="display:none;">🧠 Live · Llama 3.3 70B</span></div>
+        <div class="rname">Warehouse Transfer — Pune → Kolkata</div>
+        <div class="rreason" id="liveReason">"Preserves the delivery promise while minimizing recovery cost and carbon impact."</div>
+      </div>`;
+  } else if(i===5){ // action
+    left = `
+      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Executing recovery</div></div>
+      <div class="run-status"><span class="badge2 exec" id="execBadge">🟡 Executing…</span></div>
+      <div class="exec-list" id="execList">${EXEC_STEPS.map((t,idx)=>execItem(t,idx)).join("")}</div>`;
+    right = `<div class="stage-body"><b>Recovery Run #REC-2841</b><br><br>Every action taken here is a real write against the order, inventory and transport systems — not a suggestion for a human to carry out later.</div>`;
+  } else if(i===6){ // verify
+    left = `
+      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Verifying recovery</div></div>
+      <div class="verify-grid">
+        ${verifyCard("Inventory","420 units","236 units","Healthy")}
+        ${verifyCard("Shipment ETA","Tomorrow 22:15","Today 18:40","Delivery promise restored")}
+        ${verifyCard("Orders at risk","184","0","Protected")}
+      </div>
+      <div class="success-banner"><div class="sb-title">✅ Delivery promise restored</div><div class="sb-sub">Verification checked live system state, not just the action log.</div></div>`;
+    right = `<div class="stage-body">The agent doesn't mark a run "done" the moment it fires an API call — it re-reads inventory, ETA and at-risk order counts afterward to confirm the fix actually held.</div>`;
+  } else { // monitor again
+    left = `
+      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Monitoring resumed</div></div>
+      <div class="stage-body">Recovery run closed. NEXUS returns to continuous monitoring across the network — the same loop is already watching for the next thing to break.</div>
+      <div class="pillrow"><span class="pill">New disruption incoming: SKU-8842 · V-019 below safety stock</span></div>`;
+    right = `<div class="kv"><span class="k">Last recovery</span><span class="v">REC-2841</span></div><div class="kv"><span class="k">Time to resolve</span><span class="v">5m 12s</span></div><div class="kv"><span class="k">Next check</span><span class="v">now</span></div>`;
+  }
+
+  panel.innerHTML = `<div>${left}</div><div>${right}</div>`;
+
+  if(i===2) animateScan();
+  if(i===5) animateExec();
+  if(i===6) animateVerify();
+  if(i===4){ setTimeout(()=>{document.querySelectorAll('.weight-fill').forEach(el=>el.style.width = el.dataset.w+'%');},60); wireGroqConnect(); }
+  if(i===3) wireAltClicks();
+}
+
+function altCard(a){
+  return `<div class="alt-card ${a.recommended?'recommended':''}">
+    <div class="altname">${a.name} ${a.recommended?'<span class="altbadge">RECOMMENDED</span>':''}</div>
+    <div class="altstats"><span><b>${a.cost}</b> cost</span><span><b>${a.eta}</b> ETA</span><span><b>${a.co2}</b></span><span><b>${a.prob}</b> success</span></div>
+  </div>`;
+}
+function wireAltClicks(){
+  document.querySelectorAll('.alt-card').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.alt-card').forEach(x=>x.style.borderColor='');
+      c.style.borderColor = 'var(--blue)';
+    });
+  });
+}
+function weightRow(label,pct){
+  return `<div class="weight-row"><div class="weight-label"><span>${label}</span><span>${pct}%</span></div><div class="weight-track"><div class="weight-fill" data-w="${pct}"></div></div></div>`;
+}
+function execItem(t,idx){
+  return `<div class="exec-item" data-idx="${idx}"><div class="exec-check">✓</div><span>${t}</span></div>`;
+}
+function verifyCard(label,before,after,status){
+  return `<div class="vcard"><div class="vlabel">${label}</div><div class="vflow"><span class="before">${before}</span> → <b>${after}</b></div><div class="vstatus">🟢 ${status}</div></div>`;
+}
+function animateScan(){
+  let n=0; const el=document.getElementById('scanCounter');
+  const t=setInterval(()=>{ n++; if(el) el.textContent = n+" / 14"; if(n>=14) clearInterval(t); },90);
+}
+function animateExec(){
+  const items = document.querySelectorAll('#execList .exec-item');
+  items.forEach((it,idx)=>{
+    setTimeout(()=>{
+      items.forEach(x=>x.classList.remove('active'));
+      it.classList.add('active');
+      setTimeout(()=>{ it.classList.remove('active'); it.classList.add('done'); },420);
+      if(idx===items.length-1){
+        setTimeout(()=>{ const b=document.getElementById('execBadge'); if(b){b.textContent='🟢 Recovery executed'; b.className='badge2 ok';} },500);
+      }
+    }, idx*480);
+  });
+}
+function animateVerify(){ /* CSS handles the reveal; banner is static once rendered */ }
+
+/* ---------------------------------------------------------------
+   TRACK
+--------------------------------------------------------------- */
+function renderTrack(activeIdx, doneUpTo){
+  const track = document.getElementById('track');
+  track.innerHTML = "";
+  STAGES.forEach((s,idx)=>{
+    const node = document.createElement('div');
+    node.className = 'node' + (idx===activeIdx?' active':'') + (idx<doneUpTo?' done':'');
+    node.style.setProperty('--accent', s.color);
+    node.style.setProperty('--accent2', s.color2);
+    node.style.setProperty('--ring', s.ring);
+    node.innerHTML = `<div class="circle"><span class="idx">${idx+1}</span>${s.icon}</div><div class="label">${s.title}</div>`;
+    node.addEventListener('click', ()=>{ stopDemo(); setActive(idx, idx); });
+    track.appendChild(node);
+    if(idx < STAGES.length-1){
+      const conn = document.createElement('div');
+      conn.className = 'connector';
+      conn.innerHTML = '<div class="fill" style="width:'+(idx<doneUpTo?100:0)+'%"></div>';
+      track.appendChild(conn);
+    }
+  });
+}
+function setActive(idx, doneUpTo){
+  renderTrack(idx, doneUpTo);
+  renderStage(idx);
+}
+
+/* ---------------------------------------------------------------
+   DISRUPTION CARDS
+--------------------------------------------------------------- */
+function renderDisruptions(){
+  const grid = document.getElementById('disGrid');
+  grid.innerHTML = DISRUPTIONS.map((d,idx)=>`
+    <div class="dis-card" data-idx="${idx}" style="--sev:${d.sevColor}">
+      <div class="dis-head"><span class="dis-type">${d.type}</span><span class="sev-tag" style="--sevbg:${d.sevBg};background:${d.sevBg};--sevfg:${d.sevFg};color:${d.sevFg}">${d.sevLabel}</span></div>
+      <div class="dis-id">${d.id} · ${d.route}</div>
+      <div class="dis-stat"><span>Orders affected</span><b>${d.orders}</b></div>
+      <div class="dis-stat"><span>Detected</span><b>${d.detected}</b></div>
+      <div class="agent-status-tag as-${d.status}">${d.status==='recovering'?'⚡':d.status==='monitoring'?'👁️':'🧪'} ${d.status[0].toUpperCase()+d.status.slice(1)}</div>
+    </div>`).join("");
+  document.querySelectorAll('.dis-card').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.dis-card').forEach(x=>x.classList.remove('selected'));
+      c.classList.add('selected');
+      document.getElementById('loop').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+  grid.children[0].classList.add('selected');
+}
+
+/* ---------------------------------------------------------------
+   NETWORK
+--------------------------------------------------------------- */
+function renderNetwork(){
+  const grid = document.getElementById('netGrid');
+  grid.innerHTML = NETWORK.map(n=>`<div class="netnode ${n.state==='down'?'down':n.state==='risk'?'risk':n.state==='agent'?'agent':''}"><div class="nn-dot"></div><div class="nn-name">${n.name}</div><div class="nn-role">${n.role}</div></div>`).join("");
+}
+
+/* ---------------------------------------------------------------
+   ACTIVITY FEED
+--------------------------------------------------------------- */
+function pushFeed(icon, text, color){
+  const feed = document.getElementById('feed');
+  const now = new Date();
+  const time = now.toTimeString().slice(0,8);
+  const row = document.createElement('div');
+  row.className = 'feed-item';
+  row.innerHTML = `<span class="feed-time">${time}</span><span class="feed-icon">${icon}</span><span class="feed-text">${text}</span>`;
+  feed.prepend(row);
+  while(feed.children.length > 24) feed.removeChild(feed.lastChild);
+}
+function seedFeed(){
+  const seed = [
+    ["👁️","Monitoring 214 active shipments across network."],
+    ["🔴","Disruption detected — SHP-4821 delayed."],
+    ["🔍","Investigating 14 recovery strategies."],
+    ["📊","3 viable alternatives identified."],
+    ["🧠","Decision generated — Warehouse Transfer selected."],
+    ["⚡","Recovery action executed."],
+    ["✓","Delivery promise restored."],
+    ["👁️","Monitoring resumed."],
+  ];
+  seed.forEach(s=>pushFeed(s[0],s[1]));
+}
+
+/* ---------------------------------------------------------------
+   RUN TIMELINE
+--------------------------------------------------------------- */
+function renderTimeline(){
+  const items = [
+    ["10:42","Disruption detected"],
+    ["10:43","Alternatives generated"],
+    ["10:44","Decision selected"],
+    ["10:45","Recovery executed"],
+    ["10:47","Recovery verified"],
+  ];
+  document.getElementById('runTimeline').innerHTML = items.map(i=>`<div class="tl-item"><div class="tl-dot"></div><div><div class="tl-time">${i[0]}</div><div class="tl-label">${i[1]}</div></div></div>`).join("");
+}
+
+/* ---------------------------------------------------------------
+   METRIC COUNT-UP
+--------------------------------------------------------------- */
+function countUp(el, from, to, isFloat, suffix, prefix){
+  const dur=700, start=performance.now();
+  function step(t){
+    const p = Math.min(1,(t-start)/dur);
+    const val = from + (to-from)*p;
+    el.textContent = (prefix||"") + (isFloat? val.toFixed(1): Math.round(val).toLocaleString('en-IN')) + (suffix||"");
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function bumpMetrics(){
+  countUp(document.querySelector('[data-metric="orders"]'), 1284, 1284+184, false, "");
+  countUp(document.querySelector('[data-metric="actions"]'), 27, 28, false, "");
+  countUp(document.querySelector('[data-metric="promise"]'), 97.8, 98.4, true, "%");
+  countUp(document.querySelector('[data-metric="cost"]'), 1.84, 1.97, true, "L", "₹");
+  countUp(document.querySelector('[data-metric="carbon"]'), 326, 357, false, " kg");
+}
+
+/* ---------------------------------------------------------------
+   DEMO MODE
+--------------------------------------------------------------- */
+let demoTimer = null;
+let demoRunning = false;
+const btn = document.getElementById('runDemoBtn');
+const stepEl = document.getElementById('stepIndicator');
+
+const DEMO_STEPS = [
+  {i:0, label:"Monitoring network", ms:1600, feed:["👁️","Monitoring 214 active shipments across network."]},
+  {i:1, label:"Shipment delay detected", ms:1800, feed:["🔴","Disruption detected — SHP-4821 delayed."]},
+  {i:2, label:"Agent investigating", ms:1800, feed:["🔍","Investigating 14 recovery strategies."]},
+  {i:3, label:"Alternatives appear", ms:1800, feed:["📊","3 viable alternatives identified."]},
+  {i:4, label:"Agent evaluates alternatives", ms:2200, feed:["🧠","Weighing cost, delivery time, carbon and reliability."]},
+  {i:4, label:"Best option selected", ms:1600, feed:["🧠","Decision generated — Warehouse Transfer, 94% confidence."]},
+  {i:5, label:"Recovery executes", ms:3400, feed:["⚡","Recovery action executed — 6 systems updated."]},
+  {i:6, label:"Verification succeeds", ms:2000, feed:["✓","Delivery promise restored — 0 orders at risk."]},
+  {i:7, label:"New disruption appears", ms:1800, feed:["👁️","Monitoring resumed — watching 214 shipments."]},
+  {i:7, label:"Agent starts another recovery", ms:1600, feed:["🟠","New disruption queued — SKU-8842 below safety stock."]},
+];
+
+function runDemo(){
+  if(demoRunning){ stopDemo(); return; }
+  demoRunning = true;
+  btn.innerHTML = pauseIcon() + "Pause demo";
+  let idx = 0;
+  function next(){
+    if(idx >= DEMO_STEPS.length){
+      finishDemo();
+      return;
+    }
+    const step = DEMO_STEPS[idx];
+    stepEl.innerHTML = `Step <span class="n">${idx+1}</span> of 10 — ${step.label}`;
+    setActive(step.i, step.i+1 > STAGES.length ? STAGES.length : step.i);
+    pushFeed(step.feed[0], step.feed[1]);
+    if(idx===6) bumpMetrics();
+    idx++;
+    demoTimer = setTimeout(next, step.ms);
+  }
+  next();
+}
+function finishDemo(){
+  demoRunning = false;
+  btn.innerHTML = playIcon() + "Run again";
+  stepEl.innerHTML = "Demo complete — agent continues monitoring in the background.";
+}
+function stopDemo(){
+  if(demoTimer) clearTimeout(demoTimer);
+  demoRunning = false;
+  btn.innerHTML = playIcon() + "Run Autonomous Recovery";
+}
+function playIcon(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"/></svg>'; }
+function pauseIcon(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'; }
+
+btn.addEventListener('click', runDemo);
+
+/* ---------------------------------------------------------------
+   LIVE AI REASONING (Groq — optional, key never persisted)
+   The key lives only in a JS variable for this page session. It is
+   never written to localStorage/sessionStorage, never bundled into
+   this file, and only ever sent directly to api.groq.com.
+--------------------------------------------------------------- */
+let userGroqKey = "";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+function wireGroqConnect(){
+  const btn = document.getElementById('connectGroqBtn');
+  const input = document.getElementById('groqKeyInput');
+  if(!btn || btn.dataset.wired) return;
+  btn.dataset.wired = "1";
+  btn.addEventListener('click', ()=>{
+    const val = input.value.trim();
+    if(!val) return;
+    userGroqKey = val;
+    input.value = '•'.repeat(Math.min(val.length,24));
+    input.disabled = true;
+    btn.textContent = 'Connected ✓';
+    btn.disabled = true;
+    pushFeed("🧠","Connected to live reasoning model (Groq · Llama 3.3 70B).");
+    generateLiveReasoning();
+  });
+  // if already connected earlier in this session, re-run automatically
+  if(userGroqKey) generateLiveReasoning();
+}
+
+async function generateLiveReasoning(){
+  const box = document.getElementById('liveReason');
+  const badge = document.getElementById('liveBadge');
+  if(!box || !userGroqKey) return;
+
+  badge.style.display = 'inline-flex';
+  badge.textContent = '🧠 Generating…';
+  badge.className = 'live-tag';
+  box.style.opacity = '0.5';
+  box.textContent = 'Calling the reasoning model…';
+
+  const prompt = `You are the decision-explanation module of an autonomous supply chain recovery agent. A shipment (SHP-4821, Mumbai to Kolkata) was delayed, putting 184 orders at risk of missing their delivery promise. Three recovery options were scored:
+1. Backup vendor, Mumbai — cost ₹18,400, ETA +7 hrs, 42 kg CO2, 96% success probability.
+2. Warehouse transfer, Pune to Kolkata — cost ₹12,800, ETA +11 hrs, 31 kg CO2, 91% success probability.
+3. Route reassignment — cost ₹9,200, ETA +16 hrs, 25 kg CO2, 82% success probability.
+Scoring weights: delivery promise 45%, cost 30%, carbon impact 15%, reliability 10%.
+Option 2 (warehouse transfer) was selected. In exactly one or two sentences, in confident plain product language and with no preamble, no markdown, and no quotation marks, explain why this was the best overall choice.`;
+
+  try{
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + userGroqKey
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.6,
+        max_tokens: 120
+      })
+    });
+    if(!res.ok){
+      const errBody = await res.text().catch(()=> "");
+      throw new Error(`Groq API responded ${res.status}: ${errBody.slice(0,200)}`);
+    }
+    const data = await res.json();
+    const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content
+      ? data.choices[0].message.content.trim()
+      : "";
+    if(!text) throw new Error("Empty response from model");
+    box.textContent = '"' + text.replace(/^"+|"+$/g,'') + '"';
+    box.style.opacity = '1';
+    badge.textContent = '🧠 Live · Llama 3.3 70B';
+    pushFeed("✓","Live reasoning generated by Groq (Llama 3.3 70B).");
+  }catch(err){
+    console.warn("Live reasoning unavailable, falling back to demo copy:", err);
+    box.textContent = '"Preserves the delivery promise while minimizing recovery cost and carbon impact."';
+    box.style.opacity = '1';
+    badge.textContent = '⚠ Live call failed — showing demo copy';
+    badge.className = 'live-tag warn';
+    pushFeed("⚠️","Live reasoning call failed — check the browser console for details.");
+  }
+}
+
+/* ---------------------------------------------------------------
+   INIT
+--------------------------------------------------------------- */
+renderTrack(0,0);
+renderStage(0);
+renderDisruptions();
+renderNetwork();
+seedFeed();
+renderTimeline();
+</script>
+</body>
+</html>
