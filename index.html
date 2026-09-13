@@ -494,451 +494,66 @@
 </footer>
 
 <script>
-/* ---------------------------------------------------------------
-   DATA
---------------------------------------------------------------- */
-const STAGES = [
-  {icon:"👁️", key:"monitor",  title:"Monitor",             color:"var(--blue)",  color2:"var(--cyan)",  bg:"#EAF0FE", ring:"rgba(37,99,235,.15)"},
-  {icon:"⚠️", key:"disrupt",  title:"Disruption detected", color:"var(--red)",   color2:"#F87171",       bg:"#FEECEC", ring:"rgba(239,68,68,.15)"},
-  {icon:"🔍", key:"investigate", title:"Investigate",      color:"var(--amber)", color2:"#FBBF24",       bg:"#FEF6E7", ring:"rgba(245,158,11,.15)"},
-  {icon:"📊", key:"alternatives", title:"Alternatives found", color:"var(--cyan)", color2:"var(--blue)",  bg:"#E6F9FC", ring:"rgba(6,182,212,.15)"},
-  {icon:"🧠", key:"decision", title:"Decision",            color:"var(--violet)",color2:"#A78BFA",       bg:"#F5EEFF", ring:"rgba(124,58,237,.15)"},
-  {icon:"⚡", key:"action",   title:"Action",               color:"var(--pink)",  color2:"var(--violet)", bg:"#FDEAF4", ring:"rgba(236,72,153,.15)"},
-  {icon:"✅", key:"verify",   title:"Verify",              color:"var(--emerald)",color2:"#34D399",       bg:"#E7FBF1", ring:"rgba(16,185,129,.15)"},
-  {icon:"👁️", key:"monitor2", title:"Monitor again",       color:"var(--blue)",  color2:"var(--cyan)",  bg:"#EAF0FE", ring:"rgba(37,99,235,.15)"},
-];
+const ICONS = {
+  "observe+detect": "⚠️",
+  "decide": "🧠",
+  "act": "⚡",
+  "evaluate": "✅",
+  "adapt": "🔁",
+};
 
-const DISRUPTIONS = [
-  {id:"SHP-4821", type:"Shipment delay", sev:"crit", sevLabel:"Critical",
-   sevColor:"var(--red)", sevBg:"#FEECEC", sevFg:"#B91C1C",
-   route:"Mumbai → Kolkata", orders:184, status:"recovering",
-   detected:"10:42:05", desc:"Backup vendor + warehouse transfer under evaluation."},
-  {id:"SKU-8842", type:"Inventory shortage", sev:"warn", sevLabel:"Warning",
-   sevColor:"var(--amber)", sevBg:"#FEF6E7", sevFg:"#92610A",
-   route:"Vendor V-019 · Stock 18/150", orders:96, status:"monitoring",
-   detected:"10:38:52", desc:"Below safety stock. Queued for next recovery cycle."},
-  {id:"SKU-2391", type:"Demand spike", sev:"warn2", sevLabel:"Elevated",
-   sevColor:"var(--pink)", sevBg:"#FDEAF4", sevFg:"#9D174D",
-   route:"Demand +47%", orders:320, status:"simulating",
-   detected:"10:35:11", desc:"Agent is simulating reorder-point adjustments."},
-];
-
-const NETWORK = [
-  {name:"Vendor · Mumbai", role:"Supplier", state:"down"},
-  {name:"WH · Pune",       role:"Warehouse", state:"agent"},
-  {name:"WH · Kolkata",    role:"Warehouse", state:"agent"},
-  {name:"DC · Delhi",      role:"Distribution", state:"ok"},
-  {name:"Store · Bengaluru", role:"Retail store", state:"ok"},
-  {name:"Store · Hyderabad", role:"Retail store", state:"risk"},
-];
-
-const ALTS = [
-  {name:"Backup vendor — Mumbai", cost:"₹18,400", eta:"+7 hrs", co2:"42 kg CO₂", prob:"96%", recommended:false},
-  {name:"Warehouse transfer — Pune → Kolkata", cost:"₹12,800", eta:"+11 hrs", co2:"31 kg CO₂", prob:"91%", recommended:true},
-  {name:"Route reassignment", cost:"₹9,200", eta:"+16 hrs", co2:"25 kg CO₂", prob:"82%", recommended:false},
-];
-
-const EXEC_STEPS = [
-  "Reserve warehouse inventory",
-  "Create transfer request",
-  "Reassign shipment",
-  "Update delivery ETA",
-  "Notify affected order system",
-  "Update transportation plan",
-];
-
-/* ---------------------------------------------------------------
-   STAGE PANEL RENDERERS
---------------------------------------------------------------- */
-function renderStage(i){
-  const s = STAGES[i];
-  const panel = document.getElementById('stagePanel');
-  let left = "", right = "";
-
-  if(i===0){ // monitor
-    left = `
-      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Continuous monitoring</div></div>
-      <div class="stage-body">NEXUS polls inventory levels, shipment GPS/status feeds, vendor availability, live demand signals, warehouse capacity and route conditions across the network — every few seconds, not once a day.</div>
-      <div class="pillrow"><span class="pill">Inventory</span><span class="pill">Shipments</span><span class="pill">Vendors</span><span class="pill">Demand</span><span class="pill">Warehouse capacity</span><span class="pill">Routes</span></div>`;
-    right = `<div class="kv"><span class="k">Shipments tracked</span><span class="v">214</span></div><div class="kv"><span class="k">SKUs watched</span><span class="v">1,842</span></div><div class="kv"><span class="k">Vendors monitored</span><span class="v">37</span></div><div class="kv"><span class="k">Poll interval</span><span class="v">4s</span></div>`;
-  } else if(i===1){ // disruption
-    left = `
-      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Shipment SHP-4821 delayed</div></div>
-      <div class="stage-body">The plan just broke. A carrier delay pushes the delivery window past the customer promise.</div>
-      <div class="pillrow"><span class="pill crit">184 orders at risk</span><span class="pill">Mumbai → Kolkata</span></div>`;
-    right = `<div class="kv"><span class="k">Expected arrival</span><span class="v">Today 14:30</span></div><div class="kv"><span class="k">New ETA</span><span class="v" style="color:var(--red)">Tomorrow 22:15</span></div><div class="kv"><span class="k">Detected at</span><span class="v">10:42:18</span></div>`;
-  } else if(i===2){ // investigate
-    left = `
-      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Agent investigating…</div></div>
-      <div class="stage-body">Before touching anything, the agent scans for ways to still hit the delivery promise: alternate vendors, warehouse-to-warehouse transfers, transport routes, and available inventory across the network.</div>
-      <div class="pillrow"><span class="pill">Alternative vendors</span><span class="pill">Warehouse allocations</span><span class="pill">Transport routes</span><span class="pill">Delivery windows</span></div>`;
-    right = `<div class="kv"><span class="k">Candidates scanned</span><span class="v" id="scanCounter">0 / 14</span></div><div class="kv"><span class="k">Viable strategies</span><span class="v">—</span></div>`;
-  } else if(i===3){ // alternatives
-    left = `
-      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">3 viable strategies found</div></div>
-      <div class="alt-grid">${ALTS.map(a=>altCard(a)).join("")}</div>`;
-    right = `<div class="stage-body">Click a candidate to inspect its trade-offs. The agent doesn't pick the first workable option — it scores every one against the same weighted criteria before deciding.</div>`;
-  } else if(i===4){ // decision
-    left = `
-      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Decision engine</div></div>
-      ${weightRow("Delivery promise",45)}${weightRow("Cost",30)}${weightRow("Carbon impact",15)}${weightRow("Reliability",10)}
-      <div class="confidence-ring"><div class="ring-num">94%</div><div><div style="font-weight:700;font-size:13.5px;">Confidence score</div><div style="font-size:12px;color:var(--ink-soft);">Based on 14 evaluated strategies</div></div></div>`;
-    right = `
-      <div class="live-connect">
-        <input type="password" id="groqKeyInput" placeholder="Paste a Groq API key to generate this reasoning live (optional)" autocomplete="off">
-        <button id="connectGroqBtn">Connect</button>
-      </div>
-      <div class="live-hint">Runs entirely in your browser, straight to Groq — nothing is stored or sent anywhere else. Leave it blank to keep the demo copy below.</div>
-      <div class="rec-box">
-        <div class="rlabel">AI RECOMMENDATION <span class="live-tag" id="liveBadge" style="display:none;">🧠 Live · Llama 3.3 70B</span></div>
-        <div class="rname">Warehouse Transfer — Pune → Kolkata</div>
-        <div class="rreason" id="liveReason">"Preserves the delivery promise while minimizing recovery cost and carbon impact."</div>
-      </div>`;
-  } else if(i===5){ // action
-    left = `
-      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Executing recovery</div></div>
-      <div class="run-status"><span class="badge2 exec" id="execBadge">🟡 Executing…</span></div>
-      <div class="exec-list" id="execList">${EXEC_STEPS.map((t,idx)=>execItem(t,idx)).join("")}</div>`;
-    right = `<div class="stage-body"><b>Recovery Run #REC-2841</b><br><br>Every action taken here is a real write against the order, inventory and transport systems — not a suggestion for a human to carry out later.</div>`;
-  } else if(i===6){ // verify
-    left = `
-      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Verifying recovery</div></div>
-      <div class="verify-grid">
-        ${verifyCard("Inventory","420 units","236 units","Healthy")}
-        ${verifyCard("Shipment ETA","Tomorrow 22:15","Today 18:40","Delivery promise restored")}
-        ${verifyCard("Orders at risk","184","0","Protected")}
-      </div>
-      <div class="success-banner"><div class="sb-title">✅ Delivery promise restored</div><div class="sb-sub">Verification checked live system state, not just the action log.</div></div>`;
-    right = `<div class="stage-body">The agent doesn't mark a run "done" the moment it fires an API call — it re-reads inventory, ETA and at-risk order counts afterward to confirm the fix actually held.</div>`;
-  } else { // monitor again
-    left = `
-      <div class="stage-title-row"><div class="stage-icon" style="background:${s.bg}">${s.icon}</div><div class="stage-heading">Monitoring resumed</div></div>
-      <div class="stage-body">Recovery run closed. NEXUS returns to continuous monitoring across the network — the same loop is already watching for the next thing to break.</div>
-      <div class="pillrow"><span class="pill">New disruption incoming: SKU-8842 · V-019 below safety stock</span></div>`;
-    right = `<div class="kv"><span class="k">Last recovery</span><span class="v">REC-2841</span></div><div class="kv"><span class="k">Time to resolve</span><span class="v">5m 12s</span></div><div class="kv"><span class="k">Next check</span><span class="v">now</span></div>`;
-  }
-
-  panel.innerHTML = `<div>${left}</div><div>${right}</div>`;
-
-  if(i===2) animateScan();
-  if(i===5) animateExec();
-  if(i===6) animateVerify();
-  if(i===4){ setTimeout(()=>{document.querySelectorAll('.weight-fill').forEach(el=>el.style.width = el.dataset.w+'%');},60); wireGroqConnect(); }
-  if(i===3) wireAltClicks();
+function iconFor(stepName){
+  for(const key in ICONS) if(stepName.startsWith(key)) return ICONS[key];
+  return "•";
 }
 
-function altCard(a){
-  return `<div class="alt-card ${a.recommended?'recommended':''}">
-    <div class="altname">${a.name} ${a.recommended?'<span class="altbadge">RECOMMENDED</span>':''}</div>
-    <div class="altstats"><span><b>${a.cost}</b> cost</span><span><b>${a.eta}</b> ETA</span><span><b>${a.co2}</b></span><span><b>${a.prob}</b> success</span></div>
-  </div>`;
-}
-function wireAltClicks(){
-  document.querySelectorAll('.alt-card').forEach(c=>{
-    c.addEventListener('click',()=>{
-      document.querySelectorAll('.alt-card').forEach(x=>x.style.borderColor='');
-      c.style.borderColor = 'var(--blue)';
-    });
-  });
-}
-function weightRow(label,pct){
-  return `<div class="weight-row"><div class="weight-label"><span>${label}</span><span>${pct}%</span></div><div class="weight-track"><div class="weight-fill" data-w="${pct}"></div></div></div>`;
-}
-function execItem(t,idx){
-  return `<div class="exec-item" data-idx="${idx}"><div class="exec-check">✓</div><span>${t}</span></div>`;
-}
-function verifyCard(label,before,after,status){
-  return `<div class="vcard"><div class="vlabel">${label}</div><div class="vflow"><span class="before">${before}</span> → <b>${after}</b></div><div class="vstatus">🟢 ${status}</div></div>`;
-}
-function animateScan(){
-  let n=0; const el=document.getElementById('scanCounter');
-  const t=setInterval(()=>{ n++; if(el) el.textContent = n+" / 14"; if(n>=14) clearInterval(t); },90);
-}
-function animateExec(){
-  const items = document.querySelectorAll('#execList .exec-item');
-  items.forEach((it,idx)=>{
-    setTimeout(()=>{
-      items.forEach(x=>x.classList.remove('active'));
-      it.classList.add('active');
-      setTimeout(()=>{ it.classList.remove('active'); it.classList.add('done'); },420);
-      if(idx===items.length-1){
-        setTimeout(()=>{ const b=document.getElementById('execBadge'); if(b){b.textContent='🟢 Recovery executed'; b.className='badge2 ok';} },500);
-      }
-    }, idx*480);
-  });
-}
-function animateVerify(){ /* CSS handles the reveal; banner is static once rendered */ }
+let liveTrace = [];
 
-/* ---------------------------------------------------------------
-   TRACK
---------------------------------------------------------------- */
-function renderTrack(activeIdx, doneUpTo){
-  const track = document.getElementById('track');
-  track.innerHTML = "";
-  STAGES.forEach((s,idx)=>{
-    const node = document.createElement('div');
-    node.className = 'node' + (idx===activeIdx?' active':'') + (idx<doneUpTo?' done':'');
-    node.style.setProperty('--accent', s.color);
-    node.style.setProperty('--accent2', s.color2);
-    node.style.setProperty('--ring', s.ring);
-    node.innerHTML = `<div class="circle"><span class="idx">${idx+1}</span>${s.icon}</div><div class="label">${s.title}</div>`;
-    node.addEventListener('click', ()=>{ stopDemo(); setActive(idx, idx); });
-    track.appendChild(node);
-    if(idx < STAGES.length-1){
-      const conn = document.createElement('div');
-      conn.className = 'connector';
-      conn.innerHTML = '<div class="fill" style="width:'+(idx<doneUpTo?100:0)+'%"></div>';
-      track.appendChild(conn);
-    }
-  });
-}
-function setActive(idx, doneUpTo){
-  renderTrack(idx, doneUpTo);
-  renderStage(idx);
-}
-
-/* ---------------------------------------------------------------
-   DISRUPTION CARDS
---------------------------------------------------------------- */
-function renderDisruptions(){
-  const grid = document.getElementById('disGrid');
-  grid.innerHTML = DISRUPTIONS.map((d,idx)=>`
-    <div class="dis-card" data-idx="${idx}" style="--sev:${d.sevColor}">
-      <div class="dis-head"><span class="dis-type">${d.type}</span><span class="sev-tag" style="--sevbg:${d.sevBg};background:${d.sevBg};--sevfg:${d.sevFg};color:${d.sevFg}">${d.sevLabel}</span></div>
-      <div class="dis-id">${d.id} · ${d.route}</div>
-      <div class="dis-stat"><span>Orders affected</span><b>${d.orders}</b></div>
-      <div class="dis-stat"><span>Detected</span><b>${d.detected}</b></div>
-      <div class="agent-status-tag as-${d.status}">${d.status==='recovering'?'⚡':d.status==='monitoring'?'👁️':'🧪'} ${d.status[0].toUpperCase()+d.status.slice(1)}</div>
-    </div>`).join("");
-  document.querySelectorAll('.dis-card').forEach(c=>{
-    c.addEventListener('click',()=>{
-      document.querySelectorAll('.dis-card').forEach(x=>x.classList.remove('selected'));
-      c.classList.add('selected');
-      document.getElementById('loop').scrollIntoView({behavior:'smooth', block:'start'});
-    });
-  });
-  grid.children[0].classList.add('selected');
-}
-
-/* ---------------------------------------------------------------
-   NETWORK
---------------------------------------------------------------- */
-function renderNetwork(){
-  const grid = document.getElementById('netGrid');
-  grid.innerHTML = NETWORK.map(n=>`<div class="netnode ${n.state==='down'?'down':n.state==='risk'?'risk':n.state==='agent'?'agent':''}"><div class="nn-dot"></div><div class="nn-name">${n.name}</div><div class="nn-role">${n.role}</div></div>`).join("");
-}
-
-/* ---------------------------------------------------------------
-   ACTIVITY FEED
---------------------------------------------------------------- */
-function pushFeed(icon, text, color){
-  const feed = document.getElementById('feed');
-  const now = new Date();
-  const time = now.toTimeString().slice(0,8);
-  const row = document.createElement('div');
-  row.className = 'feed-item';
-  row.innerHTML = `<span class="feed-time">${time}</span><span class="feed-icon">${icon}</span><span class="feed-text">${text}</span>`;
-  feed.prepend(row);
-  while(feed.children.length > 24) feed.removeChild(feed.lastChild);
-}
-function seedFeed(){
-  const seed = [
-    ["👁️","Monitoring 214 active shipments across network."],
-    ["🔴","Disruption detected — SHP-4821 delayed."],
-    ["🔍","Investigating 14 recovery strategies."],
-    ["📊","3 viable alternatives identified."],
-    ["🧠","Decision generated — Warehouse Transfer selected."],
-    ["⚡","Recovery action executed."],
-    ["✓","Delivery promise restored."],
-    ["👁️","Monitoring resumed."],
-  ];
-  seed.forEach(s=>pushFeed(s[0],s[1]));
-}
-
-/* ---------------------------------------------------------------
-   RUN TIMELINE
---------------------------------------------------------------- */
-function renderTimeline(){
-  const items = [
-    ["10:42","Disruption detected"],
-    ["10:43","Alternatives generated"],
-    ["10:44","Decision selected"],
-    ["10:45","Recovery executed"],
-    ["10:47","Recovery verified"],
-  ];
-  document.getElementById('runTimeline').innerHTML = items.map(i=>`<div class="tl-item"><div class="tl-dot"></div><div><div class="tl-time">${i[0]}</div><div class="tl-label">${i[1]}</div></div></div>`).join("");
-}
-
-/* ---------------------------------------------------------------
-   METRIC COUNT-UP
---------------------------------------------------------------- */
-function countUp(el, from, to, isFloat, suffix, prefix){
-  const dur=700, start=performance.now();
-  function step(t){
-    const p = Math.min(1,(t-start)/dur);
-    const val = from + (to-from)*p;
-    el.textContent = (prefix||"") + (isFloat? val.toFixed(1): Math.round(val).toLocaleString('en-IN')) + (suffix||"");
-    if(p<1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-function bumpMetrics(){
-  countUp(document.querySelector('[data-metric="orders"]'), 1284, 1284+184, false, "");
-  countUp(document.querySelector('[data-metric="actions"]'), 27, 28, false, "");
-  countUp(document.querySelector('[data-metric="promise"]'), 97.8, 98.4, true, "%");
-  countUp(document.querySelector('[data-metric="cost"]'), 1.84, 1.97, true, "L", "₹");
-  countUp(document.querySelector('[data-metric="carbon"]'), 326, 357, false, " kg");
-}
-
-/* ---------------------------------------------------------------
-   DEMO MODE
---------------------------------------------------------------- */
-let demoTimer = null;
-let demoRunning = false;
-const btn = document.getElementById('runDemoBtn');
-const stepEl = document.getElementById('stepIndicator');
-
-const DEMO_STEPS = [
-  {i:0, label:"Monitoring network", ms:1600, feed:["👁️","Monitoring 214 active shipments across network."]},
-  {i:1, label:"Shipment delay detected", ms:1800, feed:["🔴","Disruption detected — SHP-4821 delayed."]},
-  {i:2, label:"Agent investigating", ms:1800, feed:["🔍","Investigating 14 recovery strategies."]},
-  {i:3, label:"Alternatives appear", ms:1800, feed:["📊","3 viable alternatives identified."]},
-  {i:4, label:"Agent evaluates alternatives", ms:2200, feed:["🧠","Weighing cost, delivery time, carbon and reliability."]},
-  {i:4, label:"Best option selected", ms:1600, feed:["🧠","Decision generated — Warehouse Transfer, 94% confidence."]},
-  {i:5, label:"Recovery executes", ms:3400, feed:["⚡","Recovery action executed — 6 systems updated."]},
-  {i:6, label:"Verification succeeds", ms:2000, feed:["✓","Delivery promise restored — 0 orders at risk."]},
-  {i:7, label:"New disruption appears", ms:1800, feed:["👁️","Monitoring resumed — watching 214 shipments."]},
-  {i:7, label:"Agent starts another recovery", ms:1600, feed:["🟠","New disruption queued — SKU-8842 below safety stock."]},
-];
-
-function runDemo(){
-  if(demoRunning){ stopDemo(); return; }
-  demoRunning = true;
-  btn.innerHTML = pauseIcon() + "Pause demo";
-  let idx = 0;
-  function next(){
-    if(idx >= DEMO_STEPS.length){
-      finishDemo();
-      return;
-    }
-    const step = DEMO_STEPS[idx];
-    stepEl.innerHTML = `Step <span class="n">${idx+1}</span> of 10 — ${step.label}`;
-    setActive(step.i, step.i+1 > STAGES.length ? STAGES.length : step.i);
-    pushFeed(step.feed[0], step.feed[1]);
-    if(idx===6) bumpMetrics();
-    idx++;
-    demoTimer = setTimeout(next, step.ms);
-  }
-  next();
-}
-function finishDemo(){
-  demoRunning = false;
-  btn.innerHTML = playIcon() + "Run again";
-  stepEl.innerHTML = "Demo complete — agent continues monitoring in the background.";
-}
-function stopDemo(){
-  if(demoTimer) clearTimeout(demoTimer);
-  demoRunning = false;
-  btn.innerHTML = playIcon() + "Run Autonomous Recovery";
-}
-function playIcon(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"/></svg>'; }
-function pauseIcon(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'; }
-
-btn.addEventListener('click', runDemo);
-
-/* ---------------------------------------------------------------
-   LIVE AI REASONING (Groq — optional, key never persisted)
-   The key lives only in a JS variable for this page session. It is
-   never written to localStorage/sessionStorage, never bundled into
-   this file, and only ever sent directly to api.groq.com.
---------------------------------------------------------------- */
-let userGroqKey = "";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
-
-function wireGroqConnect(){
-  const btn = document.getElementById('connectGroqBtn');
-  const input = document.getElementById('groqKeyInput');
-  if(!btn || btn.dataset.wired) return;
-  btn.dataset.wired = "1";
-  btn.addEventListener('click', ()=>{
-    const val = input.value.trim();
-    if(!val) return;
-    userGroqKey = val;
-    input.value = '•'.repeat(Math.min(val.length,24));
-    input.disabled = true;
-    btn.textContent = 'Connected ✓';
-    btn.disabled = true;
-    pushFeed("🧠","Connected to live reasoning model (Groq · Llama 3.3 70B).");
-    generateLiveReasoning();
-  });
-  // if already connected earlier in this session, re-run automatically
-  if(userGroqKey) generateLiveReasoning();
-}
-
-async function generateLiveReasoning(){
-  const box = document.getElementById('liveReason');
-  const badge = document.getElementById('liveBadge');
-  if(!box || !userGroqKey) return;
-
-  badge.style.display = 'inline-flex';
-  badge.textContent = '🧠 Generating…';
-  badge.className = 'live-tag';
-  box.style.opacity = '0.5';
-  box.textContent = 'Calling the reasoning model…';
-
-  const prompt = `You are the decision-explanation module of an autonomous supply chain recovery agent. A shipment (SHP-4821, Mumbai to Kolkata) was delayed, putting 184 orders at risk of missing their delivery promise. Three recovery options were scored:
-1. Backup vendor, Mumbai — cost ₹18,400, ETA +7 hrs, 42 kg CO2, 96% success probability.
-2. Warehouse transfer, Pune to Kolkata — cost ₹12,800, ETA +11 hrs, 31 kg CO2, 91% success probability.
-3. Route reassignment — cost ₹9,200, ETA +16 hrs, 25 kg CO2, 82% success probability.
-Scoring weights: delivery promise 45%, cost 30%, carbon impact 15%, reliability 10%.
-Option 2 (warehouse transfer) was selected. In exactly one or two sentences, in confident plain product language and with no preamble, no markdown, and no quotation marks, explain why this was the best overall choice.`;
+async function runDemo(){
+  const btn = document.getElementById('runDemoBtn');
+  const stepEl = document.getElementById('stepIndicator');
+  btn.disabled = true;
+  stepEl.textContent = "Running live agent...";
 
   try{
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + userGroqKey
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.6,
-        max_tokens: 120
-      })
-    });
-    if(!res.ok){
-      const errBody = await res.text().catch(()=> "");
-      throw new Error(`Groq API responded ${res.status}: ${errBody.slice(0,200)}`);
-    }
-    const data = await res.json();
-    const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content
-      ? data.choices[0].message.content.trim()
-      : "";
-    if(!text) throw new Error("Empty response from model");
-    box.textContent = '"' + text.replace(/^"+|"+$/g,'') + '"';
-    box.style.opacity = '1';
-    badge.textContent = '🧠 Live · Llama 3.3 70B';
-    pushFeed("✓","Live reasoning generated by Groq (Llama 3.3 70B).");
+    const res = await fetch("http://localhost:5000/api/run");
+    const result = await res.json();
+    liveTrace = result.trace;
+    renderLiveTrack();
+    stepEl.textContent = result.resolved
+      ? `Resolved via ${result.final_outcome.action_type} in ${result.attempts} attempt(s)`
+      : "Escalated to human";
   }catch(err){
-    console.warn("Live reasoning unavailable, falling back to demo copy:", err);
-    box.textContent = '"Preserves the delivery promise while minimizing recovery cost and carbon impact."';
-    box.style.opacity = '1';
-    badge.textContent = '⚠ Live call failed — showing demo copy';
-    badge.className = 'live-tag warn';
-    pushFeed("⚠️","Live reasoning call failed — check the browser console for details.");
+    stepEl.textContent = "Could not reach backend. Is api_server.py running?";
   }
+  btn.disabled = false;
 }
 
-/* ---------------------------------------------------------------
-   INIT
---------------------------------------------------------------- */
-renderTrack(0,0);
-renderStage(0);
-renderDisruptions();
-renderNetwork();
-seedFeed();
-renderTimeline();
+function renderLiveTrack(){
+  const track = document.getElementById('track');
+  track.innerHTML = "";
+  liveTrace.forEach((step, idx) => {
+    const node = document.createElement('div');
+    node.className = 'node done';
+    node.innerHTML = `<div class="circle">${iconFor(step.step)}</div><div class="label">${step.step}</div>`;
+    node.addEventListener('click', () => showStep(idx));
+    track.appendChild(node);
+  });
+  showStep(liveTrace.length - 1);
+}
+
+function showStep(idx){
+  const panel = document.getElementById('stagePanel');
+  const step = liveTrace[idx];
+  panel.innerHTML = `
+    <div>
+      <div class="stage-heading">${step.step}</div>
+      <pre style="white-space:pre-wrap;font-size:13px;background:#F8FAFD;padding:14px;border-radius:12px;">${JSON.stringify(step.data, null, 2)}</pre>
+    </div>
+    <div></div>`;
+}
+
+document.getElementById('runDemoBtn').addEventListener('click', runDemo);
 </script>
 </body>
 </html>

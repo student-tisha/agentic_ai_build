@@ -34,33 +34,18 @@ def detect_disruption(shipment):
 
 def build_candidate_options(shipment):
     options = []
-
     for r in data.routes:
         if r["from"] == shipment["from"] and r["to"] == shipment["to"] and r["route_id"] != shipment["route_id"]:
-            options.append({
-                "type": "reroute", "id": r["route_id"],
-                "price": r["price"], "lead_time_days": r["lead_time_days"], "carbon": r["carbon_kg"],
-            })
-
+            options.append({"type": "reroute", "id": r["route_id"], "price": r["price"], "lead_time_days": r["lead_time_days"], "carbon": r["carbon_kg"]})
     for v in data.vendors.get(shipment["item"], []):
         if v["vendor_id"] != shipment["from"]:
-            options.append({
-                "type": "vendor_switch", "id": v["vendor_id"],
-                "price": v["price_per_unit"] * shipment["qty"],
-                "lead_time_days": v["lead_time_days"],
-                "carbon": v["carbon_kg_per_unit"] * shipment["qty"],
-            })
-
+            options.append({"type": "vendor_switch", "id": v["vendor_id"], "price": v["price_per_unit"] * shipment["qty"], "lead_time_days": v["lead_time_days"], "carbon": v["carbon_kg_per_unit"] * shipment["qty"]})
     for wh, items in data.inventory.items():
         stock = items.get(shipment["item"], 0)
         if wh != shipment["to"] and stock >= shipment["qty"]:
             route = next((r for r in data.routes if r["from"] == wh and r["to"] == shipment["to"]), None)
             if route:
-                options.append({
-                    "type": "warehouse_transfer", "id": wh,
-                    "price": route["price"], "lead_time_days": route["lead_time_days"], "carbon": route["carbon_kg"],
-                })
-
+                options.append({"type": "warehouse_transfer", "id": wh, "price": route["price"], "lead_time_days": route["lead_time_days"], "carbon": route["carbon_kg"]})
     return options
 
 
@@ -76,22 +61,24 @@ def decide(disruption, candidate_options, failed_options):
     scored.sort(key=lambda x: x["score"])
     best = scored[0]
 
-    system = (
-        "You are a supply chain recovery assistant. Given a disruption and the "
-        "best-scored recovery option, write a short 1-2 sentence justification. "
-        "Respond ONLY as JSON: {\"reasoning\": str}"
-    )
-    user = json.dumps({"disruption": disruption, "chosen_option": best})
+    reasoning = "Selected based on lowest combined price/time/carbon score."
     try:
+        system = (
+            "You are a supply chain recovery assistant. Given a disruption and the "
+            "best-scored recovery option, write a short 1-2 sentence justification. "
+            "Respond ONLY as JSON: {\"reasoning\": str}"
+        )
+        user = json.dumps({"disruption": disruption, "chosen_option": best})
         response = client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
             temperature=0.2,
             response_format={"type": "json_object"},
+            timeout=5,
         )
-        reasoning = json.loads(response.choices[0].message.content).get("reasoning", "")
-    except Exception:
-        reasoning = "Selected based on lowest combined price/time/carbon score."
+        reasoning = json.loads(response.choices[0].message.content).get("reasoning", reasoning)
+    except Exception as e:
+        print("Groq call failed or timed out:", e)
 
     return {"action_type": best["type"], "target_id": best["id"], "reasoning": reasoning}
 
@@ -133,13 +120,8 @@ def resolve_disruption(shipment_id, max_attempts=4):
         if decision["action_type"] == "escalate":
             return {"resolved": False, "final_outcome": "escalate", "trace": trace}
 
-        is_demo_blocked = any(
-            b["type"] == decision["action_type"] and b["id"] == decision["target_id"] for b in BLOCKED_OPTIONS
-        )
-        if is_demo_blocked:
-            act_result = {"success": False, "error": "unavailable_for_demo"}
-        else:
-            act_result = act(shipment, decision["action_type"], decision["target_id"])
+        is_demo_blocked = any(b["type"] == decision["action_type"] and b["id"] == decision["target_id"] for b in BLOCKED_OPTIONS)
+        act_result = {"success": False, "error": "unavailable_for_demo"} if is_demo_blocked else act(shipment, decision["action_type"], decision["target_id"])
         trace.append({"step": f"act (attempt {attempt})", "data": act_result})
 
         eval_result = evaluate(act_result, is_demo_blocked)
@@ -153,21 +135,17 @@ def resolve_disruption(shipment_id, max_attempts=4):
 
     return {"resolved": False, "final_outcome": "escalate", "trace": trace}
 
+
 def reset_demo():
     data.shipments.clear()
     data.shipments.extend([
-        {
-            "shipment_id": "SHIP-001", "item": "item_A", "from": "VendorX", "to": "WH1",
-            "qty": 50, "route_id": "R1", "status": "in_transit", "eta_days": 3,
-        },
-        {
-            "shipment_id": "SHIP-002", "item": "item_B", "from": "VendorY", "to": "WH2",
-            "qty": 20, "route_id": "R2", "status": "in_transit", "eta_days": 5,
-        },
+        {"shipment_id": "SHIP-001", "item": "item_A", "from": "VendorX", "to": "WH1", "qty": 50, "route_id": "R1", "status": "in_transit", "eta_days": 3},
+        {"shipment_id": "SHIP-002", "item": "item_B", "from": "VendorY", "to": "WH2", "qty": 20, "route_id": "R2", "status": "in_transit", "eta_days": 5},
     ])
     data.inventory["WH1"] = {"item_A": 120, "item_B": 40, "item_C": 15}
     data.inventory["WH2"] = {"item_A": 30, "item_B": 90, "item_C": 60}
     data.inventory["WH3"] = {"item_A": 5, "item_B": 10, "item_C": 200}
+
 
 if __name__ == "__main__":
     data.shipments[0]["status"] = "delayed"
