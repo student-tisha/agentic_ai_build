@@ -74,3 +74,15 @@ Plain HTML, CSS, and vanilla JavaScript — one file, zero dependencies, zero bu
 
 - Color system, type system, and component list are documented inline in `index.html` — see the CSS custom properties at the top of the `<style>` block.
 - If you extend this: the mock data objects (`STAGES`, `DISRUPTIONS`, `ALTS`, `NETWORK`, `DEMO_STEPS`) are all in one place near the top of the `<script>` block, so adding a new disruption scenario doesn't require touching any rendering code.
+
+
+## Quick Start (Recommended)
+
+```bash
+pip install -r requirements.txt
+pip install flask flask-cors
+export GROQ_API_KEY="your_key_here"   # get one free at console.groq.com
+python run_all.py
+```
+
+This automatically starts both the backend and frontend, and opens the demo in your browser at `http://localhost:8000/index.html`.
