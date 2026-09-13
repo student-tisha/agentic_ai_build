@@ -153,6 +153,21 @@ def resolve_disruption(shipment_id, max_attempts=4):
 
     return {"resolved": False, "final_outcome": "escalate", "trace": trace}
 
+def reset_demo():
+    data.shipments.clear()
+    data.shipments.extend([
+        {
+            "shipment_id": "SHIP-001", "item": "item_A", "from": "VendorX", "to": "WH1",
+            "qty": 50, "route_id": "R1", "status": "in_transit", "eta_days": 3,
+        },
+        {
+            "shipment_id": "SHIP-002", "item": "item_B", "from": "VendorY", "to": "WH2",
+            "qty": 20, "route_id": "R2", "status": "in_transit", "eta_days": 5,
+        },
+    ])
+    data.inventory["WH1"] = {"item_A": 120, "item_B": 40, "item_C": 15}
+    data.inventory["WH2"] = {"item_A": 30, "item_B": 90, "item_C": 60}
+    data.inventory["WH3"] = {"item_A": 5, "item_B": 10, "item_C": 200}
 
 if __name__ == "__main__":
     data.shipments[0]["status"] = "delayed"
