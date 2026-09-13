@@ -1,0 +1,10 @@
+{
+  "name": "nexus-supply-chain-recovery",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NEXUS — Autonomous Retail Supply Chain Recovery Agent (hackathon frontend, PS6)",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}

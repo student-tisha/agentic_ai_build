@@ -1,0 +1,134 @@
+<svg viewBox="0 0 1300 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#5B6478"/>
+    </marker>
+    <marker id="arrowLoop" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/>
+    </marker>
+    <linearGradient id="gAgent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1300" height="900" fill="#F6F8FC"/>
+  <text x="40" y="46" font-size="24" font-weight="800" fill="#0F172A">NEXUS — System Architecture</text>
+  <text x="40" y="70" font-size="13" fill="#5B6478">Autonomous Retail Supply Chain Recovery Agent · Problem Statement 6</text>
+
+  <!-- Data sources -->
+  <g>
+    <rect x="40" y="110" width="230" height="150" rx="16" fill="#FFFFFF" stroke="#E7ECF5"/>
+    <text x="60" y="140" font-size="14" font-weight="800" fill="#0F172A">Data Sources</text>
+    <text x="60" y="165" font-size="12.5" fill="#5B6478">Inventory levels (WMS)</text>
+    <text x="60" y="187" font-size="12.5" fill="#5B6478">Shipment tracking / GPS</text>
+    <text x="60" y="209" font-size="12.5" fill="#5B6478">Vendor availability API</text>
+    <text x="60" y="231" font-size="12.5" fill="#5B6478">Demand signals (POS/forecast)</text>
+  </g>
+
+  <!-- Monitoring agent -->
+  <g>
+    <rect x="330" y="110" width="230" height="150" rx="16" fill="#EAF0FE" stroke="#C7D6FB"/>
+    <text x="350" y="140" font-size="14" font-weight="800" fill="#1E40AF">👁 Monitoring Agent</text>
+    <text x="350" y="165" font-size="12.5" fill="#334155">Polls all data sources</text>
+    <text x="350" y="187" font-size="12.5" fill="#334155">Normalizes into event stream</text>
+    <text x="350" y="209" font-size="12.5" fill="#334155">Runs on a fixed interval loop</text>
+  </g>
+
+  <!-- Disruption detector -->
+  <g>
+    <rect x="620" y="110" width="230" height="150" rx="16" fill="#FEECEC" stroke="#F9CACA"/>
+    <text x="640" y="140" font-size="14" font-weight="800" fill="#B91C1C">⚠ Disruption Detector</text>
+    <text x="640" y="165" font-size="12.5" fill="#334155">Compares live state vs. plan</text>
+    <text x="640" y="187" font-size="12.5" fill="#334155">Flags delay / stock-out / spike</text>
+    <text x="640" y="209" font-size="12.5" fill="#334155">Computes blast radius (orders)</text>
+  </g>
+
+  <!-- Frontend -->
+  <g>
+    <rect x="910" y="110" width="350" height="150" rx="16" fill="#F5EEFF" stroke="#E2D6FB"/>
+    <text x="930" y="140" font-size="14" font-weight="800" fill="#5B21B6">🖥 NEXUS Dashboard (this build)</text>
+    <text x="930" y="165" font-size="12.5" fill="#334155">Recovery loop · Disruption panel</text>
+    <text x="930" y="187" font-size="12.5" fill="#334155">Decision explanation · Agent activity feed</text>
+    <text x="930" y="209" font-size="12.5" fill="#334155">Subscribes to event stream (WebSocket / poll)</text>
+  </g>
+
+  <!-- Decision engine -->
+  <g>
+    <rect x="330" y="330" width="520" height="180" rx="18" fill="#FFFFFF" stroke="#E2D6FB" stroke-width="1.5"/>
+    <text x="350" y="360" font-size="15" font-weight="800" fill="#5B21B6">🧠 Decision Engine</text>
+    <rect x="350" y="378" width="230" height="112" rx="12" fill="#F5EEFF"/>
+    <text x="365" y="400" font-size="12.5" font-weight="700" fill="#0F172A">Alternative Generator</text>
+    <text x="365" y="420" font-size="11.5" fill="#5B6478">Backup vendors</text>
+    <text x="365" y="438" font-size="11.5" fill="#5B6478">Warehouse transfers</text>
+    <text x="365" y="456" font-size="11.5" fill="#5B6478">Route reassignments</text>
+    <text x="365" y="474" font-size="11.5" fill="#5B6478">Inventory reallocation</text>
+
+    <rect x="600" y="378" width="230" height="112" rx="12" fill="#F5EEFF"/>
+    <text x="615" y="400" font-size="12.5" font-weight="700" fill="#0F172A">Multi-Factor Evaluator</text>
+    <text x="615" y="420" font-size="11.5" fill="#5B6478">Delivery promise · 45%</text>
+    <text x="615" y="438" font-size="11.5" fill="#5B6478">Cost · 30%</text>
+    <text x="615" y="456" font-size="11.5" fill="#5B6478">Carbon impact · 15%</text>
+    <text x="615" y="474" font-size="11.5" fill="#5B6478">Reliability · 10%</text>
+    <path d="M580,434 L598,434" stroke="#7C3AED" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- Action executor -->
+  <g>
+    <rect x="910" y="330" width="350" height="180" rx="18" fill="#FDEAF4" stroke="#F6C4DE"/>
+    <text x="930" y="360" font-size="15" font-weight="800" fill="#9D174D">⚡ Action Executor</text>
+    <text x="930" y="388" font-size="12.5" fill="#334155">Reserve warehouse inventory</text>
+    <text x="930" y="410" font-size="12.5" fill="#334155">Create transfer / reroute request</text>
+    <text x="930" y="432" font-size="12.5" fill="#334155">Reassign shipment + update ETA</text>
+    <text x="930" y="454" font-size="12.5" fill="#334155">Notify order management system</text>
+    <text x="930" y="476" font-size="11.5" fill="#94A3B8">→ Vendor API · Warehouse API · Routing API</text>
+  </g>
+
+  <!-- Verification -->
+  <g>
+    <rect x="330" y="580" width="520" height="130" rx="18" fill="#E7FBF1" stroke="#BEF3DA"/>
+    <text x="350" y="610" font-size="15" font-weight="800" fill="#067A55">✅ Verification Service</text>
+    <text x="350" y="636" font-size="12.5" fill="#334155">Re-reads live inventory, ETA and at-risk order counts</text>
+    <text x="350" y="658" font-size="12.5" fill="#334155">Confirms the fix held — not just that the write succeeded</text>
+    <text x="350" y="680" font-size="12.5" fill="#334155">Emits verified / failed → feeds back into monitoring</text>
+  </g>
+
+  <!-- Event / activity store -->
+  <g>
+    <rect x="910" y="580" width="350" height="130" rx="18" fill="#FFFFFF" stroke="#E7ECF5"/>
+    <text x="930" y="610" font-size="15" font-weight="800" fill="#0F172A">🗂 Event &amp; Activity Store</text>
+    <text x="930" y="636" font-size="12.5" fill="#5B6478">Every stage transition is logged</text>
+    <text x="930" y="658" font-size="12.5" fill="#5B6478">Powers Agent Activity feed + run history</text>
+    <text x="930" y="680" font-size="12.5" fill="#5B6478">Mocked in this build; swappable for a real DB</text>
+  </g>
+
+  <!-- arrows main flow -->
+  <path d="M270,185 L330,185" stroke="#5B6478" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M560,185 L620,185" stroke="#5B6478" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M735,260 L735,330" stroke="#5B6478" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M850,420 L910,420" stroke="#5B6478" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M1085,510 L1085,580" stroke="#5B6478" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M910,645 L850,645" stroke="#5B6478" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M590,580 L590,510" stroke="#5B6478" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- frontend subscribes -->
+  <path d="M1085,260 L1085,330" stroke="#A78BFA" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+  <path d="M1085,510 L1085,510" stroke="none"/>
+  <path d="M910,190 Q 780,300 850,375" stroke="#A78BFA" stroke-width="1.6" stroke-dasharray="5,4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M910,600 Q 700,700 560,645" stroke="#A78BFA" stroke-width="1.6" stroke-dasharray="5,4" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- loop back arrow: verification -> monitoring agent -->
+  <path d="M330,610 C 100,610 60,400 60,260 C 60,240 200,220 330,190"
+        stroke="#7C3AED" stroke-width="2.4" fill="none" marker-end="url(#arrowLoop)"/>
+  <text x="70" y="440" font-size="12.5" font-weight="700" fill="#7C3AED" transform="rotate(-90 70 440)">continuous loop — verified state feeds back into monitoring</text>
+
+  <!-- legend -->
+  <g>
+    <rect x="40" y="770" width="1220" height="90" rx="14" fill="#FFFFFF" stroke="#E7ECF5"/>
+    <text x="60" y="798" font-size="13" font-weight="800" fill="#0F172A">Legend</text>
+    <circle cx="70" cy="820" r="6" fill="#5B6478"/><text x="85" y="825" font-size="12" fill="#334155">Solid arrow — data / control flow</text>
+    <circle cx="330" cy="820" r="6" fill="#A78BFA"/><text x="345" y="825" font-size="12" fill="#334155">Dashed arrow — frontend read / subscribe</text>
+    <circle cx="660" cy="820" r="6" fill="#7C3AED"/><text x="675" y="825" font-size="12" fill="#334155">Violet arrow — the autonomous loop closing back to Monitor</text>
+    <text x="60" y="848" font-size="11.5" fill="#94A3B8">In this hackathon build: Data Sources, Decision Engine inputs and Action Executor calls are simulated by a mock data layer that mirrors the shape of real APIs.</text>
+  </g>
+</svg>
